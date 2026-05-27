@@ -7,6 +7,10 @@
 4) Run live_demo.ipynb on the track
 5) Adjust the parameters from live_demo.ipynb based on how the robot operates
 
+# What could go wrong
+
+1) live_demo cell that has # CHANGED comment - maybe some math there needs to be adjusted
+
 ## Dataset
 Datasety są w folderze datasets. Można je zmieniać w OUTPUT_DIR w annotation_script.py i w DATASET_NAME w train_model.ipynb
 
