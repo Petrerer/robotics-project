@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Output directory expected by XYDataset
-OUTPUT_DIR = 'dataset_labeled_2'
+OUTPUT_DIR = 'datasets/dataset_labeled_2'
 OUTPUT_CSV = os.path.join(OUTPUT_DIR, 'labels.csv')
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
