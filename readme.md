@@ -1,18 +1,21 @@
 # Robotics II
 
 # How to use repo on jetbot
+1) Copy file live_demo.ipynb to jetbot
+2) Copy file models/dataset_labeled_2/model_to_import.pth to jetbot (lub models/dataset_labeled_1/model_to_import.pth - it was trained on a differently labeled dataset)
+3) Fix the path to model from live_demo.ipynb to the uploaded model
+4) Run live_demo.ipynb on the track
+5) Adjust the parameters from live_demo.ipynb based on how the robot operates
 
-1) przekopiować pliki live_demo.ipynb i jeden z modeli z models/dataset_name/model_to_import
-(ważne - model to import jest zapisany w starym formacie pasujacym do jetbota)
-2) odpalić live_demo.ipynb i ztestowac jetbota
-3) za pomocą slajderów w notebooku przesuwać parametry jetbota
+# What could go wrong
+
+1) live_demo cell that has # CHANGED comment - maybe some math there needs to be adjusted
 
 ## Dataset
 Datasety są w folderze datasets. Można je zmieniać w OUTPUT_DIR w annotation_script.py i w DATASET_NAME w train_model.ipynb
 
 dataset_labeled_1 - wybierałem zawsze +- trzecią kreskę od robota - powinno sprawić że jest bardziej robust
 dataset_labeled_2 - wybierałem kreskę jak najdalej żeby jechał trochę bardziej "na krechę"
-
 
 ## How to make the repo work
 1) annotation_script.py - Run annotation script on dataset from politechnika because its images are nice but labels are bs
