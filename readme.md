@@ -1,50 +1,86 @@
-# Robotics II: Deep Learning-Based Autonomous Road-Following for Jetbot
+# Robotics II — JetBot Road Following
 
-This repository contains the dataset annotation, model training, benchmarking, and real-time execution pipeline for a Jetbot robot designed to autonomously follow a track.
+Autonomous track-following for NVIDIA JetBot using a ResNet-18 model trained on manually annotated camera frames.
 
-For a comprehensive analysis of the system architecture, datasets, GPU benchmarks, control theory, and recommendations, please refer to the detailed [Project Report (report.md)](file:///Users/daniel/Developer/Projects/robotics-project/report.md).
+**Team:** Piotr Franc, Jakub Adamski, Piotr Foltyniewicz, Wiktor Talarek, Daniel Skalski
 
 ---
 
-## 🚀 Quick Start & Run Instructions
+## Requirements
 
-All local preprocessing, labeling, and benchmarking scripts are organized and fully runnable using the `uv` package manager.
+- Python 3 with `uv` installed (local machine)
+- JetBot with CUDA-capable GPU (required for on-robot inference)
+- PyTorch, torchvision, PIL, pandas, matplotlib, numpy
 
-### 1. Project Setup
-Ensure you have `uv` installed, then run the commands from the root directory.
+---
 
-### 2. Interactive Annotation (Dataset Labeling)
-If you want to annotate new frames or review the labeling interface, run:
+## 1. Annotate Images
+
+Place your session folders and CSVs under `dataset/`, then run:
+
 ```bash
 uv run python3 annotation_script.py
 ```
-* **Controls**: Click on the image to place a target steering coordinate, press `S` to skip, or press `Q` to save and quit. Labels are written to `datasets/dataset_labeled_5/labels.csv`.
 
-### 3. Model Training
-Open the training notebook [train_model.ipynb](file:///Users/daniel/Developer/Projects/robotics-project/train_model.ipynb) in your Jupyter environment.
-* Configured for **ResNet-18** and **MobileNet-V2** architectures with input scaling, color jitter, cropping, and horizontal flips.
-* Checkpoints are stored in the `models/` directory.
+- **Click** on the image to place a steering target point
+- **S** — skip the current frame
+- **Q** — save progress and quit
 
-### 4. Local Testing & Benchmarking
-Open the test notebook [model_testing.ipynb](file:///Users/daniel/Developer/Projects/robotics-project/model_testing.ipynb) to:
-* Benchmark CPU/GPU inference latency and throughput (FPS).
-* Visualize predicted steering target coordinates overlaid on sample images.
-
-### 5. Running on the Jetbot Track
-1. Upload [live_demo.ipynb](file:///Users/daniel/Developer/Projects/robotics-project/live_demo.ipynb) and your chosen `.pth` model (from the `models/` folder) to the Jetbot.
-2. Update the path to the model in the notebook.
-3. Adjust the control parameters:
-   * `SPEED_GAIN` (motor speed limit)
-   * `STEERING_GAIN` (proportional steering coefficient)
-   * `STEERING_DGAIN` (derivative coefficient to damp oscillations)
-   * `STEERING_BIAS` (to align drift)
-4. Execute the cells to activate camera-to-motor execution loop.
+Labels are saved to `datasets/dataset_labeled_5/labels.csv`. The script resumes where it left off if you run it again.
 
 ---
 
-## 📊 Summary of Datasets & Models
+## 2. Train the Model
 
-* **Datasets**: Located in [datasets/](file:///Users/daniel/Developer/Projects/robotics-project/datasets/). Includes datasets targeting points closer to the robot for high stability (`dataset_labeled_1`) and datasets targeting far look-ahead points for fast corner-cutting (`dataset_labeled_2`).
-* **Pretrained Models**: Located in [models/](file:///Users/daniel/Developer/Projects/robotics-project/models/). Contains ready-to-run models for ResNet-18 and MobileNet-V2 at various resolutions.
+Open `train_model.ipynb` and set `DATASET_NAME` to your dataset folder, then run all cells.
 
-For full results and mathematical details, read [report.md](file:///Users/daniel/Developer/Projects/robotics-project/report.md).
+- Architecture: ResNet-18 pretrained on ImageNet, final layer replaced with `Linear(512, 2)`
+- Optimizer: Adam, 70 epochs, batch size 8, MSE loss
+- Best checkpoint saved to `models/<DATASET_NAME>/best_steering_model_xy.pth`
+
+After training, the notebook also exports a legacy-format model for JetBot compatibility:
+
+```python
+torch.save(state_dict, 'model_to_import.pth', _use_new_zipfile_serialization=False)
+```
+
+Use `model_to_import.pth` when uploading to the robot.
+
+---
+
+## 3. Test Locally
+
+Open `model_testing.ipynb` to run inference on CPU without the robot. Set `MODEL_PATH` and `DATASET_NAME` at the top, then run all cells to visualise predicted steering points and benchmark inference speed.
+
+---
+
+## 4. Run on the JetBot
+
+1. Upload `live_demo_executelock.ipynb` and `model_to_import.pth` to the JetBot
+2. Set `MODEL_PATH` in the notebook to point to your uploaded `.pth` file
+3. Run all cells — the robot will start following the track
+
+**Tunable parameters** (adjust until the robot runs smoothly):
+
+| Parameter | Description | Starting value |
+|---|---|---|
+| `SPEED_GAIN` | Base motor speed | ~0.28 |
+| `STEERING_GAIN` | Proportional steering strength | ~0.09 |
+| `STEERING_DGAIN` | Derivative term to reduce oscillation | 0.0 |
+| `STEERING_BIAS` | Offset to correct left/right drift | 0.0 |
+
+> **Important:** Always stop the notebook by running the stop cell before closing the browser tab. Closing the tab without stopping will freeze the camera and require a full JetBot reboot.
+
+---
+
+## Project Structure
+
+```
+├── annotation_script.py       # Manual labelling tool
+├── train_model.ipynb          # Model training
+├── model_testing.ipynb        # Local inference & benchmarking
+├── live_demo_executelock.ipynb # On-robot execution loop
+├── dataset/                   # Raw session frames and CSVs from PUT
+├── datasets/                  # Annotated datasets (labels.csv + images)
+└── models/                    # Saved model checkpoints
+```
